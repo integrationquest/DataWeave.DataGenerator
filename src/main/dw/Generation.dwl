@@ -4,19 +4,21 @@ import * from mocks::helpers::RandomHelpers
 import * from mocks::constants::DataConstants
 import * from mocks::DataGenerators
 import * from dw::core::Strings
+import * from dw::core::Periods
 
 var coldReferralCodes = {
     WEBSIGNUP: 4,
     CALLCENTER: 3,
     COLDEMAIL: 1
 }
+var launchDate = |2024-04-04T06:30:00-05:00|
 var usCities = readUrl("classpath://uscities.csv", "application/csv")
 var userWords = readUrl("classpath://username-words.csv", "application/csv") map $.word
 
 type ContactName = {
-        first: String,
-        last: String
-    }
+    first: String,
+    last: String
+}
 
 type Address = {
         street: String,
@@ -34,6 +36,7 @@ type Customer = {
         phone: String,
         email: String,
     },
+    signUp: DateTime,
     referred: String
 }
 
@@ -76,17 +79,17 @@ fun newEmail(name: ContactName): String = do {
     "$(username)@$(domain)"
 }
 
-fun generateCustomers(count: Number, generations: Number, referralCodes = coldReferralCodes, existing: Array<Customer> = []): Array<Customer> =
+fun generateCustomers(count: Number, generations: Number = 6, existing: Array<Customer> = []): Array<Customer> =
     if (sizeOf(existing) >= count) existing take count
     else do {
         var baseReferralCode = pickRandom(
-            flatten(referralCodes pluck (weight, code) -> 
+            flatten(coldReferralCodes pluck (weight, code) -> 
                 (1 to weight) map code))
         var inviter = customers(1, baseReferralCode)[0]
-        var referrals = generateReferrals(generations, count - sizeOf(existing), [inviter.inviteCode])
+        var referrals = generateReferrals(generations, count - sizeOf(existing), [inviter])
         // var forLog = log("referrals for $(inviter.inviteCode)", sizeOf(referrals))
         ---
-        generateCustomers(count, generations, referralCodes, (existing << inviter) ++ referrals)
+        generateCustomers(count, generations, (existing << inviter) ++ referrals)
     }
 
 fun numberOfInvites(): Number = if (random() < 0.6) 0 // many people never invite anyone
@@ -97,27 +100,39 @@ fun numberOfInvites(): Number = if (random() < 0.6) 0 // many people never invit
         count
     }
 @TailRec
-fun generateReferrals(generations: Number, max: Number, codes: Array<String>, invited: Array<Customer> = []): Array<Customer> =
+fun generateReferrals(generations: Number, max: Number, inviters: Array<Customer>, invited: Array<Customer> = []): Array<Customer> =
     if (generations == 0) invited
     else do {
         // var forLog = log("generating referrals for $(generations) generations", codes)
-        var nextGeneration = codes reduce (code, people = []) ->
+        var nextGeneration = inviters reduce (inviter, people = []) ->
             if (sizeOf(people) > max) people
             else do {
                 var needed = max - (sizeOf(people) + sizeOf(invited))
                 var planned = numberOfInvites()
                 var count = if (needed < planned) needed else planned
                 ---
-                people ++ customers(count, code)
+                people ++ customers(count, inviter.inviteCode, inviter.signUp)
             }
         ---
-        generateReferrals(generations - 1, max, nextGeneration map $.inviteCode, invited ++ nextGeneration)
+        generateReferrals(generations - 1, max, nextGeneration, invited ++ nextGeneration)
     }
 
+fun newSignUpDate(after: DateTime): DateTime = do {
+    var daysSinceLaunch = (now() - after).days
+    // squaring a random in [0,1) favors small values
+    // var daysAgo = floor((random() * random()) * daysSinceLaunch)
+    var daysAgo = randomInt(daysSinceLaunch) + 1
+    // summing two randoms gives a normal distribution (poisson)
+    var secondOfDay = floor((random() + random()) / 2 * 86400) + 6 * 3600
+    var daysAfterLaunch = daysSinceLaunch - daysAgo
+    ---
+    after + period({days: daysAfterLaunch}) + duration({seconds: secondOfDay})
+}
 
-fun customers(count: Number, referredBy: String): Array<Customer> =
+fun customers(count: Number, referredBy: String, after: DateTime = launchDate): Array<Customer> =
   if (count == 0) [] else (1 to count) map do {
     var name = newName()
+    var signedUp = newSignUpDate(after)
     ---
     {
         id: randomId(32),
@@ -128,6 +143,7 @@ fun customers(count: Number, referredBy: String): Array<Customer> =
             phone: randomPhoneNumber(),
             email: newEmail(name)
         },
+        signUp: signedUp,
         referred: referredBy
     }
   }

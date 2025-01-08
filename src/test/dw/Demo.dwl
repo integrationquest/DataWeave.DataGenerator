@@ -15,7 +15,9 @@ import * from Generation
 ---
 // usCities[0]
 // sizeOf(generateCustomers(5000, 400))
-sizeOf(customers(300, "TEST"))
+// sizeOf(customers(300, "TEST"))
 // inviters
 //sizeOf(readUrl("classpath://customers-5k.json"))
 // wow WAY slower than DW CLI
+// generateCustomers(200,8)
+generateCustomers(400)
