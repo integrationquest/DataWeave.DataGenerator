@@ -10,9 +10,25 @@
     <!-- NOTE: Remember to add your Anypoint Platform credentials in ~/.m2/settings.xml file -->
     <groupId>quest.integration</groupId>
     <artifactId>dw-data-generator</artifactId>
-    <version>0.1.0-SNAPSHOT</version>
+    <version>0.1.0</version>
     <packaging>dw-library</packaging>
     <name>Data Generator</name>
+    <description>DataWeave 2.0 library for generating mock data</description>
+    <url>https://github.com/integrationquest/DataWeave.DataGenerator</url>
+    <licenses>
+        <license>
+            <name>The Apache License, Version 2.0</name>
+            <url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+        </license>
+    </licenses>
+    <developers>
+        <developer>
+            <name>Ryan Hoegg</name>
+            <email>ryan@hoegg.software</email>
+            <organization>Hoegg Software, Co.</organization>
+            <organizationUrl>https://hoegg.software</organizationUrl>
+        </developer>
+    </developers>
 
     <properties>
         <data.weave.version>2.6.3</data.weave.version>

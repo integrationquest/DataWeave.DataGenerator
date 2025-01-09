@@ -3,14 +3,7 @@
 Provides realistic mock data with help from the [MuleSoft mock data generators](https://anypoint.mulesoft.com/exchange/68ef9520-24e9-4cf2-b2f5-620025690913/data-weave-mock-data-generators-library/minor/1.0/)
 
 ## Installation
-Add this to your `pom.xml`
-```xml
-<dependency>
-  <groupId>quest.integration</groupId>
-  <artifactId>dw-data-generator</artifactId>
-  <version>0.1.0</version>
-</dependency>
-```
+This library is still pre-release, so you have to clone the repository and install using maven locally
 
 # Generators
 
