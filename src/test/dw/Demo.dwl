@@ -15,6 +15,6 @@ import * from dw::iq::Generation
 ---
 // sizeOf(readUrl("classpath://customers-5k.json"))
 // wow WAY slower than DW CLI with -i in VS Code
-generateCustomers(200,8)
+generateCustomers(2)
 // generateCustomers(400)
 
