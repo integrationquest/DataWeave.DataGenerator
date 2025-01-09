@@ -3,7 +3,7 @@
 output application/json
 
 import * from dw::core::Arrays
-import * from Generation
+import * from dw::iq::Generation
 
 // var previous = generateCustomers(1000, 8)
 // var previous = readUrl("file:///Users/rhoegg/tmp/customers-5k.json")
@@ -13,11 +13,8 @@ import * from Generation
 //         (referredCode): sizeOf(people)
 //     }
 ---
-// usCities[0]
-// sizeOf(generateCustomers(5000, 400))
-// sizeOf(customers(300, "TEST"))
-// inviters
-//sizeOf(readUrl("classpath://customers-5k.json"))
-// wow WAY slower than DW CLI
-// generateCustomers(200,8)
-generateCustomers(400)
+// sizeOf(readUrl("classpath://customers-5k.json"))
+// wow WAY slower than DW CLI with -i in VS Code
+generateCustomers(200,8)
+// generateCustomers(400)
+

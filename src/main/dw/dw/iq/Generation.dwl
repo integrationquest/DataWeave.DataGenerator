@@ -1,10 +1,12 @@
 %dw 2.0
 import take from dw::core::Arrays
+import * from dw::core::Dates
+import * from dw::core::Strings
+import * from dw::core::Periods
+import * from dw::iq::RandomUtils
 import * from mocks::helpers::RandomHelpers
 import * from mocks::constants::DataConstants
 import * from mocks::DataGenerators
-import * from dw::core::Strings
-import * from dw::core::Periods
 
 var coldReferralCodes = {
     WEBSIGNUP: 4,
@@ -117,17 +119,32 @@ fun generateReferrals(generations: Number, max: Number, inviters: Array<Customer
         generateReferrals(generations - 1, max, nextGeneration, invited ++ nextGeneration)
     }
 
-fun newSignUpDate(after: DateTime): DateTime = do {
-    var daysSinceLaunch = (now() - after).days
-    // squaring a random in [0,1) favors small values
-    // var daysAgo = floor((random() * random()) * daysSinceLaunch)
-    var daysAgo = randomInt(daysSinceLaunch) + 1
-    // summing two randoms gives a normal distribution (poisson)
-    var secondOfDay = floor((random() + random()) / 2 * 86400) + 6 * 3600
-    var daysAfterLaunch = daysSinceLaunch - daysAgo
-    ---
-    after + period({days: daysAfterLaunch}) + duration({seconds: secondOfDay})
-}
+fun newSignUpDate(after: DateTime): DateTime = if (after > (now() - |PT1M|)) after
+    else do {
+        var age: Period = (now() - after)
+        var signUpTime: Period = 
+        if (age as Number {unit: "minutes"} < 90) seconds(randomInt(age.seconds))
+        else if (age as Number {unit: "days"}  < 3) do {
+            var modeMinutes = 45
+            var secs = logNormalCapped(age.minutes / modeMinutes) * modeMinutes * 60
+            ---
+            seconds(floor(secs))
+        } else do {
+            var modeDays = 2
+            // doing this in seconds
+            var secondsPastMidnight = after - atBeginningOfDay(after)
+            var delayDays = floor(logNormalCapped((age as Number {unit: "days"} - 1) / modeDays) * modeDays)
+            var meanTimeOfDay = 14 * 60 * 60
+ 
+            var signUpDelta = floor(gaussian() * 3 * 60 * 60)
+            var totalDelaySecs = delayDays * 86400 - secondsPastMidnight + meanTimeOfDay + signUpDelta
+            ---
+            seconds(totalDelaySecs)
+        }
+        var result = after + signUpTime
+        ---
+        if (result > after) result else newSignUpDate(after)
+    }
 
 fun customers(count: Number, referredBy: String, after: DateTime = launchDate): Array<Customer> =
   if (count == 0) [] else (1 to count) map do {
