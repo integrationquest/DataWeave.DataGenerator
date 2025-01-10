@@ -13,7 +13,12 @@ var coldReferralCodes = {
     CALLCENTER: 3,
     COLDEMAIL: 1
 }
-var launchDate = |2024-04-04T06:30:00-05:00|
+var launchDate = |2022-02-22T06:30:00-05:00|
+var promoDates = do {
+    var daysSinceLaunch = (now() - launchDate) as Number {unit: "days"}
+    ---
+    (1 to 6) map launchDate + days(randomInt(daysSinceLaunch))
+}
 var usCities = readUrl("classpath://uscities.csv", "application/csv")
 var userWords = readUrl("classpath://username-words.csv", "application/csv") map $.word
 
@@ -94,13 +99,8 @@ fun generateCustomers(count: Number, generations: Number = 6, existing: Array<Cu
         generateCustomers(count, generations, (existing << inviter) ++ referrals)
     }
 
-fun numberOfInvites(): Number = if (random() < 0.6) 0 // many people never invite anyone
-    else do {
-        var socialFactor = 2 pow randomInt(7)
-        var count = socialFactor - randomInt(socialFactor)
-        ---
-        count
-    }
+fun numberOfInvites(): Number = if (random() < 0.5) 0 // many people never invite anyone
+    else floor(logNormal() * 3 * 2) // mode should be 2 invites
 @TailRec
 fun generateReferrals(generations: Number, max: Number, inviters: Array<Customer>, invited: Array<Customer> = []): Array<Customer> =
     if (generations == 0) invited
@@ -133,7 +133,7 @@ fun newSignUpDate(after: DateTime): DateTime = if (after > (now() - |PT1M|)) aft
             var modeDays = 2
             // doing this in seconds
             var secondsPastMidnight = after - atBeginningOfDay(after)
-            var delayDays = floor(logNormalCapped((age as Number {unit: "days"} - 1) / modeDays) * modeDays)
+            var delayDays = floor(logNormalCapped((age as Number {unit: "days"} - 1) / modeDays / 3) * modeDays * 3)
             var meanTimeOfDay = 14 * 60 * 60
  
             var signUpDelta = floor(gaussian() * 3 * 60 * 60)
@@ -149,7 +149,10 @@ fun newSignUpDate(after: DateTime): DateTime = if (after > (now() - |PT1M|)) aft
 fun customers(count: Number, referredBy: String, after: DateTime = launchDate): Array<Customer> =
   if (count == 0) [] else (1 to count) map do {
     var name = newName()
-    var signedUp = newSignUpDate(after)
+    var signedUp = if (after == launchDate and random() < 0.3) do {
+        // mix up the cold sign up dates
+        newSignUpDate(pickRandom(promoDates))
+    } else newSignUpDate(after)
     ---
     {
         id: randomId(32),

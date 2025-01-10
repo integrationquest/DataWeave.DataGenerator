@@ -10,7 +10,7 @@
     <!-- NOTE: Remember to add your Anypoint Platform credentials in ~/.m2/settings.xml file -->
     <groupId>quest.integration</groupId>
     <artifactId>dw-data-generator</artifactId>
-    <version>0.1.0</version>
+    <version>0.1.1</version>
     <packaging>dw-library</packaging>
     <name>Data Generator</name>
     <description>DataWeave 2.0 library for generating mock data</description>
